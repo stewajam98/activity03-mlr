@@ -3,6 +3,47 @@ title: "Activity 2 - Day 1"
 output: github_document
 ---
 
-```{setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{R, setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(tidyverse)
+library(GGally)
+library(tidymodels)
+library(ggplot2)
 ```
+
+## Task 3 - Reading in the data
+    1. The collection of data is definitely an observational study. They are not forcing these onto different countries.
+    2. The pf_score is skewed to the left and there is also a whole in the middle
+    3. pf_religion and ef_money does not seem to have much of a relationship. There seems to be a higher proportion of those located around the top right, but no other relationship.
+
+```{R, loading_data, message = FALSE, warnings = FALSE}
+hfi <- readr::read_csv("https://www.openintro.org/data/csv/hfi.csv")
+
+ggplot(hfi, aes(x = pf_score)) +
+  geom_histogram()
+
+ggplot(hfi, aes(x = pf_religion, y = ef_money)) +
+  geom_point()
+```
+
+## Task 4 - Pairwise Relationship
+    4. hf_score seems to have a linear relationship with both other values. pf_score and ef_score seem to have a somewhat linear relationship but this is not as strong (the spread of data points is greater).You could also say that there is some curve.
+    5. 
+
+```{R, Exploring Models, warning = FALSE}
+hfi %>% 
+  select(ends_with("_score")) %>% 
+  ggpairs()
+```
+
+
+## Task 5 - The multiple linear regression model
+```{R warning=FALSE}
+m_hr_ef <- lm(pf_score ~ hf_score + ef_score, data = hfi)
+tidy(m_hr_ef)
+
+```
+
+  6. pf_score = 1.46e-11 + 2.00(hf_score) + -1.00(ef_score)
+  7. hf_score: With ef_score held constant, an increase in hf_score by 1 relates to an increase in pf_score by 2. ef_score: with hf_score held constant, an increase in ef_score by 1 relates to a decrease in pf_score by 1. intercept: with hf_score and ef_score being equal to 0, the pf_score is around 1.464e-11 or ~0.
+
