@@ -1,7 +1,9 @@
 ---
-title: "Activity 2 - Day 1"
+title: "Activity 2"
 output: github_document
 ---
+
+# Day 1
 
 ```{R, setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
@@ -18,11 +20,13 @@ library(ggplot2)
 
 ```{R, loading_data, message = FALSE, warnings = FALSE}
 hfi <- readr::read_csv("https://www.openintro.org/data/csv/hfi.csv")
+hfi_2016 <- hfi %>%
+  filter(year == 2016)
 
-ggplot(hfi, aes(x = pf_score)) +
+ggplot(hfi_2016, aes(x = pf_score)) +
   geom_histogram()
 
-ggplot(hfi, aes(x = pf_religion, y = ef_money)) +
+ggplot(hfi_2016, aes(x = pf_religion, y = ef_money)) +
   geom_point()
 ```
 
@@ -31,7 +35,7 @@ ggplot(hfi, aes(x = pf_religion, y = ef_money)) +
     5. 
 
 ```{R, Exploring Models, warning = FALSE}
-hfi %>% 
+hfi_2016 %>% 
   select(ends_with("_score")) %>% 
   ggpairs()
 ```
@@ -39,11 +43,93 @@ hfi %>%
 
 ## Task 5 - The multiple linear regression model
 ```{R warning=FALSE}
-m_hr_ef <- lm(pf_score ~ hf_score + ef_score, data = hfi)
+m_hr_ef <- lm(pf_score ~ hf_score + ef_score, data = hfi_2016)
 tidy(m_hr_ef)
 
 ```
 
   6. pf_score = 1.46e-11 + 2.00(hf_score) + -1.00(ef_score)
   7. hf_score: With ef_score held constant, an increase in hf_score by 1 relates to an increase in pf_score by 2. ef_score: with hf_score held constant, an increase in ef_score by 1 relates to a decrease in pf_score by 1. intercept: with hf_score and ef_score being equal to 0, the pf_score is around 1.464e-11 or ~0.
+
+# Day 2
+
+## Task 2
+
+```{R}
+hfi %>%
+  select(pf_score, pf_expression_influence, pf_expression_control) %>%
+  ggpairs()
+
+# fitting the mlr model
+m_pf <- lm(pf_score ~ pf_expression_influence + pf_expression_control, data = hfi)
+tidy(m_pf)
+
+```
+
+  1. Both of the corrleations are positive (meaning that as one goes up the other goes up). It also looks like the two IVs are more correlated with each other than either of the IVs are with the DV, so they aren't explaining much of the model by themselves.
+
+
+### Is there a relationship?
+
+```{R}
+summary(m_pf)
+```
+
+  2. Based on a significance level of 0.05, we would choose to reject the null hypothesis with a p-value of <2.2e-16. This means that at least one of the beta values for these variables is/are greater than one.
+  
+## Task 3
+
+  4. Yes they are correct.
+  5. These are t-values.
+  6. I think the df are 1375
+  7. the pf_expression_control looks to be more important than the other one. This is because the t-statistic is higher in value.
+  
+## Task 4
+
+```{R}
+glance(m_pf)
+```
+
+  8. r^2 = 0.655
+  9. This means that the model explains 65.5% of the variance in the pf_score.
+  10. 
+
+
+```{R}
+# obtain fitted values and residuals
+m_pf_aug <- augment(m_pf)
+
+# plot fitted values and residuals
+ggplot(data = m_pf_aug, aes(x = .fitted, y = .resid)) + 
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "red") +
+  xlab("Fitted values") +
+  ylab("Residuals")
+```
+
+  11. There doens't seem to be any pattern, however you could say that the edges of the values are more spread out than the other ones.
+  
+```{R}
+ggplot(data = m_pf_aug, aes(x = .resid)) +
+  geom_histogram(binwidth = 0.25) +
+  xlab("Residual")
+
+```
+
+  12. Yes, it looks slightly skewed to the left, but not enough to make a significant difference.
+
+  13. Yes, see what I said for my response in question 11.
+  
+## Task 5
+
+```{R}
+hfi %>%
+  filter(countries == "United States" & year == 2016) %>%
+  predict(m_pf, .)
+
+```
+
+  14.
+  15. resid = 0.51729
+  16. 
 
